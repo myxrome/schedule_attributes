@@ -1,10 +1,13 @@
-require 'active_support/all'
+# via https://github.com/zpearce/Schedule-Attributes/raw/master/lib/schedule_atts.rb
+
 require 'ice_cube'
-require 'time'
+require 'active_support'
+require 'active_support/time_with_zone'
 require 'ostruct'
 
 module ScheduleAtts
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
+
   def schedule
     @schedule ||= begin
       if schedule_yaml.blank?
@@ -29,13 +32,27 @@ module ScheduleAtts
       @schedule = IceCube::Schedule.new(options[:start_date])
 
       rule = case options[:interval_unit]
-        when 'day'
-          IceCube::Rule.daily options[:interval]
-        when 'week'
-          IceCube::Rule.weekly(options[:interval]).day( *IceCube::TimeUtil::DAYS.keys.select{|day| options[day].to_i == 1 } )
-        when 'month'
-          IceCube::Rule.monthly options[:interval]
-      end
+             when 'day'
+               IceCube::Rule.daily options[:interval]
+             when 'week'
+               if (options.keys & DAY_NAMES).empty?
+                 IceCube::Rule.weekly(options[:interval])
+               else
+                 IceCube::Rule.weekly(options[:interval]).day( *IceCube::TimeUtil::DAYS.keys.select{|day| options[day].to_i == 1 } )
+               end
+             when 'month'
+               if options[:by_day_of].nil?
+                 IceCube::Rule.monthly options[:interval]
+               elsif options[:by_day_of] == 'month'
+                 IceCube::Rule.monthly(options[:interval]).day_of_month(options[:day_of_month].to_i)
+               elsif options[:by_day_of] == 'week'
+                 # schedule.add_recurrence_rule Rule.monthly.day_of_week(:tuesday => [1, -1])
+                 # every month on the first and last tuesdays of the month
+                 IceCube::Rule.monthly(options[:interval]).day_of_week(options[:day_of_week].to_sym => [options[:day_of_month].to_i])
+               end
+             when 'year'
+                IceCube::Rule.yearly(options[:interval]).month_of_year(options[:start_date].month).day_of_month(options[:start_date].day)
+             end
 
       rule.until(options[:until_date]) if options[:ends] == 'eventually'
 
@@ -61,11 +78,25 @@ module ScheduleAtts
         atts[:interval_unit] = 'day'
       when IceCube::WeeklyRule
         atts[:interval_unit] = 'week'
-        rule_hash[:validations][:day].each do |day_idx|
-          atts[ DAY_NAMES[day_idx] ] = 1
+
+        if rule_hash[:validations][:day]
+          rule_hash[:validations][:day].each do |day_idx|
+            atts[ DAY_NAMES[day_idx] ] = 1
+          end
         end
       when IceCube::MonthlyRule
         atts[:interval_unit] = 'month'
+
+        day_of_week = rule_hash[:validations][:day_of_week]
+        day_of_month = rule_hash[:validations][:day_of_month]
+
+        if day_of_week
+          day_of_week = day_of_week.first.flatten
+          atts[:day_of_week] = DAY_NAMES[day_of_week.first]
+          atts[:day_of_month] = day_of_week[1]
+        elsif day_of_month
+          atts[:day_of_month] = day_of_month.first
+        end
       end
 
       if rule.until_time
@@ -83,7 +114,6 @@ module ScheduleAtts
     OpenStruct.new(atts)
   end
 
-  # TODO: test this
   def self.parse_in_timezone(str)
     if Time.respond_to?(:zone) && Time.zone
       Time.zone.parse(str)
@@ -93,10 +123,8 @@ module ScheduleAtts
   end
 end
 
-# TODO: we shouldn't need this
 ScheduleAttributes = ScheduleAtts
 
-#TODO: this should be merged into ice_cube, or at least, make a pull request or something.
 class IceCube::Rule
   def ==(other)
     to_hash == other.to_hash
@@ -108,4 +136,3 @@ class IceCube::Schedule
     to_hash == other.to_hash
   end
 end
-
