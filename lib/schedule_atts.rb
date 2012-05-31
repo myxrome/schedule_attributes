@@ -41,7 +41,7 @@ module ScheduleAtts
                  IceCube::Rule.weekly(options[:interval]).day( *IceCube::TimeUtil::DAYS.keys.select{|day| options[day].to_i == 1 } )
                end
              when 'month'
-               if options[:by_day_of].nil?
+               if options[:by_day_of].blank?
                  IceCube::Rule.monthly options[:interval]
                elsif options[:by_day_of] == 'month'
                  IceCube::Rule.monthly(options[:interval]).day_of_month(options[:day_of_month].to_i)
@@ -86,6 +86,7 @@ module ScheduleAtts
         end
       when IceCube::MonthlyRule
         atts[:interval_unit] = 'month'
+        atts[:repeat]     = 2
 
         day_of_week = rule_hash[:validations][:day_of_week]
         day_of_month = rule_hash[:validations][:day_of_month]
@@ -94,8 +95,12 @@ module ScheduleAtts
           day_of_week = day_of_week.first.flatten
           atts[:day_of_week] = DAY_NAMES[day_of_week.first]
           atts[:day_of_month] = day_of_week[1]
+          atts[:by_day_of] = 'week'
         elsif day_of_month
           atts[:day_of_month] = day_of_month.first
+          atts[:by_day_of] = 'month'
+        else
+          atts[:repeat]     = 1
         end
       end
 
