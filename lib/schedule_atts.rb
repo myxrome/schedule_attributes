@@ -3,9 +3,12 @@
 require 'ice_cube'
 require 'active_support'
 require 'active_support/time_with_zone'
+require 'active_support/concern'
 require 'ostruct'
 
-module ScheduleAtts
+module ScheduleAttributes
+  extend ActiveSupport::Concern
+
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
   def schedule
@@ -125,7 +128,7 @@ module ScheduleAtts
   end
 end
 
-ScheduleAttributes = ScheduleAtts
+ScheduleAtts = ScheduleAttributes
 
 class IceCube::Rule
   def ==(other)
