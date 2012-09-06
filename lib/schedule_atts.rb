@@ -109,6 +109,9 @@ module ScheduleAttributes
 
       if rule.until_time
         atts[:until_date] = rule.until_time.to_date
+        atts[:ends] = 'eventually'
+      else
+        atts[:ends] = 'never'
       end
     else
       atts[:repeat]     = 0
