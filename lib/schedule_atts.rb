@@ -57,7 +57,7 @@ module ScheduleAttributes
                 IceCube::Rule.yearly(options[:interval]).month_of_year(options[:start_date].month).day_of_month(options[:start_date].day)
              end
 
-      rule.until(options[:until_date]) if options[:until_date].present?
+      rule.until(options[:until_date]) if options[:until_date].present? && options[:ends] != 'never'
 
       @schedule.add_recurrence_rule(rule)
     end
