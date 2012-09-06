@@ -1,5 +1,3 @@
-# via https://github.com/zpearce/Schedule-Attributes/raw/master/lib/schedule_atts.rb
-
 require 'ice_cube'
 require 'active_support'
 require 'active_support/time_with_zone'
