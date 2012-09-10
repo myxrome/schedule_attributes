@@ -1,6 +1,6 @@
 require 'schedule_attributes'
 
 class ScheduledModel
-  include ScheduleAttributes
+  include ScheduleAttributes::Model
   attr_accessor :schedule_yaml
 end
