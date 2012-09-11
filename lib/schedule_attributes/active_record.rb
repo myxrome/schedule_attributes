@@ -16,6 +16,11 @@ module ScheduleAttributes::ActiveRecord
     end
   end
 
+  def schedule=(new_schedule)
+    write_schedule_attributes(new_schedule.to_yaml)
+    @schedule = new_schedule
+  end
+
   included do
     unless @schedule_attributes_key
       key = ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
