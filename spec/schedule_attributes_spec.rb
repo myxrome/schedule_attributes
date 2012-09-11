@@ -21,6 +21,7 @@ describe ScheduledModel do
       describe "setting the correct schedule" do
         let(:scheduled_model) { ScheduledModel.new.tap{ |m| m.schedule_attributes = schedule_attributes } }
         subject { scheduled_model.schedule }
+
         context "given :interval_unit=>none" do
           let(:schedule_attributes){ { :repeat => '0', :date => '1-1-1985', :interval => '5 (ignore this)' } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
@@ -58,6 +59,11 @@ describe ScheduledModel do
           it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-7')).should be_false }
           it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-21')).should be_true }
         end
+
+        context "given :interval_unit=>day without :interval" do
+          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day' } }
+          its(:rrules){ should == [IceCube::Rule.daily(1)] }
+        end
       end
 
       context "setting the schedule_yaml column" do
@@ -81,7 +87,7 @@ describe ScheduledModel do
 
       context "when it's a 1-time thing" do
         before{ schedule.add_recurrence_time(Date.tomorrow.to_time) }
-        it{ should == OpenStruct.new(:repeat => 0, :date => Date.tomorrow, :start_date => Date.today) }
+        it{ should == OpenStruct.new(:repeat => 0, :interval => 1, :date => Date.tomorrow, :start_date => Date.today) }
         its(:date){ should be_a(Date) }
       end
 

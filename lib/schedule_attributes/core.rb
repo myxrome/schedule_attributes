@@ -26,7 +26,7 @@ module ScheduleAttributes
 
     def schedule_attributes=(options)
       options = options.dup
-      options[:interval] = options[:interval].to_i
+      options[:interval] = options.fetch(:interval, 1).to_i # default to 1 when repeat
       options[:start_date] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:start_date])
       options[:date]       &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:date])
       options[:until_date] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:until_date])
@@ -118,6 +118,7 @@ module ScheduleAttributes
         end
       else
         atts[:repeat]     = 0
+        atts[:interval]   = 1
         atts[:date]       = schedule.start_time.to_date
         atts[:start_date] = Date.today # for populating the other part of the form
       end
@@ -136,4 +137,3 @@ module ScheduleAttributes
     end
   end
 end
-
