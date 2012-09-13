@@ -16,10 +16,12 @@ module ScheduleAttributes
 
     def schedule
       @schedule ||= begin
-        if (yaml_schedule = read_schedule_attributes).blank?
-          IceCube::Schedule.new(Date.today.to_time).tap{ |sched| sched.add_recurrence_rule(IceCube::Rule.daily) }
+        unless (serialization = read_schedule_attributes).blank?
+          IceCube::Schedule.from_yaml(serialization)
         else
-          IceCube::Schedule.from_yaml(yaml_schedule)
+          IceCube::Schedule.new(Date.today.to_time).tap do |s|
+            s.add_recurrence_rule(IceCube::Rule.daily)
+          end
         end
       end
     end
