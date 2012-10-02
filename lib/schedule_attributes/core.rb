@@ -5,14 +5,18 @@ require 'ice_cube'
 require 'ostruct'
 require 'schedule_attributes/extensions/ice_cube'
 require 'schedule_attributes/time_helpers'
+require 'schedule_attributes/rule_parser'
 
 module ScheduleAttributes
   DEFAULT_ATTRIBUTE_KEY = :schedule_yaml
+  DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
+
+  def self.parse_rule(options)
+    RuleParser[options[:interval_unit]].parse(options)
+  end
 
   module Core
     extend ActiveSupport::Concern
-
-    DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
     def schedule
       @schedule ||= begin
@@ -27,45 +31,37 @@ module ScheduleAttributes
     end
 
     def schedule_attributes=(options)
-      options = options.dup
-      options[:interval] = options.fetch(:interval, 1).to_i # default to 1 when repeat
-      options[:start_date] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:start_date])
-      options[:date]       &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:date])
-      options[:until_date] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone(options[:until_date])
+      options = options.with_indifferent_access
+      options[:interval] = options.fetch(:interval, 1).to_i
+
+      date_input = if options[:repeat].to_i == 0
+                     options[:dates] ? options[:dates].first : options[:date]
+                   else
+                     options[:start_date]
+                   end
+
+      options[:start_time] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone([date_input, options[:start_time]].reject(&:blank?).join(' '))
+      options[:end_time] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone([date_input, options[:end_time]].reject(&:blank?).join(' '))
+      if options[:start_time] && options[:end_time]
+        options[:duration] = options[:end_time] - options[:start_time]
+      end
 
       if options[:repeat].to_i == 0
-        @schedule = IceCube::Schedule.new(options[:date])
-        @schedule.add_recurrence_time(options[:date])
+        dates = Array(options[:dates] || options[:date]).map do |d|
+          ScheduleAttributes::TimeHelpers.parse_in_timezone([d, options[:start_time]].reject(&:blank?).join(' '))
+        end
+
+        @schedule = IceCube::Schedule.new(dates.first)
+
+        dates.each { |d| @schedule.add_recurrence_time(d) }
       else
-        @schedule = IceCube::Schedule.new(options[:start_date])
+        @schedule = IceCube::Schedule.new(options[:start_time])
 
-        rule = case options[:interval_unit]
-               when 'day'
-                 IceCube::Rule.daily options[:interval]
-               when 'week'
-                 if (options.keys & DAY_NAMES).empty?
-                   IceCube::Rule.weekly(options[:interval])
-                 else
-                   IceCube::Rule.weekly(options[:interval]).day( *IceCube::TimeUtil::DAYS.keys.select{|day| options[day].to_i == 1 } )
-                 end
-               when 'month'
-                 if options[:by_day_of].blank?
-                   IceCube::Rule.monthly options[:interval]
-                 elsif options[:by_day_of] == 'month'
-                   IceCube::Rule.monthly(options[:interval]).day_of_month(options[:day_of_month].to_i)
-                 elsif options[:by_day_of] == 'week'
-                   # schedule.add_recurrence_rule Rule.monthly.day_of_week(:tuesday => [1, -1])
-                   # every month on the first and last tuesdays of the month
-                   IceCube::Rule.monthly(options[:interval]).day_of_week(options[:day_of_week].to_sym => [options[:day_of_month].to_i])
-                 end
-               when 'year'
-                  IceCube::Rule.yearly(options[:interval]).month_of_year(options[:start_date].month).day_of_month(options[:start_date].day)
-               end
-
-        rule.until(options[:until_date]) if options[:until_date].present? && options[:ends] != 'never'
-
-        @schedule.add_recurrence_rule(rule)
+        rule = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
+        @schedule.add_recurrence_rule(rule.parse) if rule
       end
+
+      @schedule.duration = options[:duration] if options[:duration]
 
       write_schedule_attributes(@schedule.to_yaml)
     end
@@ -73,10 +69,13 @@ module ScheduleAttributes
     def schedule_attributes
       atts = {}
 
+      atts[:start_time] = schedule.start_time.strftime('%H:%M %p')
+      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime('%H:%M %p')
+
       if rule = schedule.rrules.first
         atts[:repeat]     = 1
         atts[:start_date] = schedule.start_time.to_date
-        atts[:date]       = Date.today # for populating the other part of the form
+        atts[:date]       = Date.today # default for populating the other part of the form
 
         rule_hash = rule.to_hash
         atts[:interval] = rule_hash[:interval]
@@ -89,31 +88,27 @@ module ScheduleAttributes
 
           if rule_hash[:validations][:day]
             rule_hash[:validations][:day].each do |day_idx|
-              atts[ DAY_NAMES[day_idx] ] = 1
+              atts[ ScheduleAttributes::DAY_NAMES[day_idx] ] = 1
             end
           end
         when IceCube::MonthlyRule
           atts[:interval_unit] = 'month'
-          atts[:repeat]     = 2
 
           day_of_week = rule_hash[:validations][:day_of_week]
           day_of_month = rule_hash[:validations][:day_of_month]
 
           if day_of_week
             day_of_week = day_of_week.first.flatten
-            atts[:day_of_week] = DAY_NAMES[day_of_week.first]
-            atts[:day_of_month] = day_of_week[1]
-            atts[:by_day_of] = 'week'
+            atts[:ordinal_week] = day_of_week.first
+            atts[:ordinal_unit] = 'week'
           elsif day_of_month
-            atts[:day_of_month] = day_of_month.first
-            atts[:by_day_of] = 'month'
-          else
-            atts[:repeat]     = 1
+            atts[:ordinal_day]  = day_of_month.first
+            atts[:ordinal_unit] = 'day'
           end
         end
 
         if rule.until_time
-          atts[:until_date] = rule.until_time.to_date
+          atts[:end_date] = rule.until_time.to_date
           atts[:ends] = 'eventually'
         else
           atts[:ends] = 'never'
@@ -122,7 +117,7 @@ module ScheduleAttributes
         atts[:repeat]     = 0
         atts[:interval]   = 1
         atts[:date]       = schedule.start_time.to_date
-        atts[:start_date] = Date.today # for populating the other part of the form
+        atts[:start_date] = Date.today # default for populating the other part of the form
       end
 
       OpenStruct.new(atts)

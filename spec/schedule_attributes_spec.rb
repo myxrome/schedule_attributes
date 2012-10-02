@@ -22,10 +22,17 @@ describe ScheduledModel do
         let(:scheduled_model) { ScheduledModel.new.tap{ |m| m.schedule_attributes = schedule_attributes } }
         subject { scheduled_model.schedule }
 
-        context "given :interval_unit=>none" do
+        context "given :interval_unit=>none & :date => '1-1-1985'" do
           let(:schedule_attributes){ { :repeat => '0', :date => '1-1-1985', :interval => '5 (ignore this)' } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
           its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time] }
+          its(:rrules){ should be_blank }
+        end
+
+        context "given :interval_unit=>none & :dates => ['1-1-1985', '31-12-1985']" do
+          let(:schedule_attributes){ { :repeat => '0', :dates => ['1-1-1985', '31-12-1985'], :interval => '5 (ignore this)' } }
+          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
+          its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time, Date.new(1985,12,31).to_time] }
           its(:rrules){ should be_blank }
         end
 
@@ -37,9 +44,9 @@ describe ScheduledModel do
         end
 
         context "given :interval_unit=>day & :ends=>eventually & :until_date" do
-          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day', :interval => '3', :until_date => '29-12-1985', :ends => 'eventually' } }
+          let(:schedule_attributes){ { "repeat" => "1", "start_date" => "1-1-1985", "interval_unit" => "day", "interval" => "3", "end_date" => "29-12-1985", "ends" => "eventually" } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:rrules){ should == [ IceCube::Rule.daily(3).until(Date.new(1985, 12, 29).to_time) ] }
+          its(:rrules){ should == [ IceCube::Rule.daily(3).until(Date.new(1985, 12, 29).to_time_in_current_zone) ] }
           it{ subject.first(3).should == [Date.civil(1985, 1, 1), Date.civil(1985, 1, 4), Date.civil(1985, 1, 7)].map(&:to_time) }
         end
 
@@ -87,7 +94,7 @@ describe ScheduledModel do
 
       context "when it's a 1-time thing" do
         before{ schedule.add_recurrence_time(Date.tomorrow.to_time) }
-        it{ should == OpenStruct.new(:repeat => 0, :interval => 1, :date => Date.tomorrow, :start_date => Date.today) }
+        it{ should == OpenStruct.new(:repeat => 0, :interval => 1, :date => Date.tomorrow, :start_date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
         its(:date){ should be_a(Date) }
       end
 
@@ -95,7 +102,7 @@ describe ScheduledModel do
         before do
           schedule.add_recurrence_rule(IceCube::Rule.daily(4))
         end
-        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today) }
+        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
         its(:start_date){ should be_a(Date) }
       end
 
@@ -103,9 +110,9 @@ describe ScheduledModel do
         before do
           schedule.add_recurrence_rule(IceCube::Rule.daily(4).until((Date.today+10).to_time))
         end
-        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :until_date => Date.today+10, :date => Date.today) }
+        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
         its(:start_date){ should be_a(Date) }
-        its(:until_date){ should be_a(Date) }
+        its(:end_date){ should be_a(Date) }
       end
 
       context "when it repeats weekly" do
@@ -123,6 +130,8 @@ describe ScheduledModel do
             :monday        => 1,
             :wednesday     => 1,
             :friday        => 1,
+            :start_time    => "00:00 AM",
+            :end_time      => "00:00 AM",
 
             :date          => Date.today #for the form
           )
