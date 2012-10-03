@@ -34,7 +34,9 @@ module ScheduleAttributes
       options = options.with_indifferent_access
       options[:interval] = options.fetch(:interval, 1).to_i
 
-      date_input = if options[:repeat].to_i == 0
+      repeat = [false, 0, "false", "0", "none"].none? { |v| options[:repeat] == v }
+
+      date_input = if repeat
                      options[:dates] ? options[:dates].first : options[:date]
                    else
                      options[:start_date]
@@ -46,19 +48,19 @@ module ScheduleAttributes
         options[:duration] = options[:end_time] - options[:start_time]
       end
 
-      if options[:repeat].to_i == 0
-        dates = Array(options[:dates] || options[:date]).map do |d|
+      if repeat
+        @schedule = IceCube::Schedule.new(options[:start_time])
+
+        rule = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
+        @schedule.add_recurrence_rule(rule.parse) if rule
+      else
+        dates = (options[:dates] || [options[:date]]).map do |d|
           ScheduleAttributes::TimeHelpers.parse_in_zone([d, options[:start_time]].reject(&:blank?).join(' '))
         end
 
         @schedule = IceCube::Schedule.new(dates.first)
 
         dates.each { |d| @schedule.add_recurrence_time(d) }
-      else
-        @schedule = IceCube::Schedule.new(options[:start_time])
-
-        rule = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
-        @schedule.add_recurrence_rule(rule.parse) if rule
       end
 
       @schedule.duration = options[:duration] if options[:duration]

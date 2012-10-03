@@ -4,6 +4,7 @@ PATH
     schedule_attributes (0.1.0)
       activesupport
       ice_cube (~> 0.8.0)
+      tzinfo
 
 GEM
   remote: http://rubygems.org/
@@ -31,6 +32,7 @@ GEM
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.8.0)
     slop (3.3.3)
+    tzinfo (0.3.33)
 
 PLATFORMS
   ruby

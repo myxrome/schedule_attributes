@@ -22,14 +22,14 @@ describe ScheduledModel do
         let(:scheduled_model) { ScheduledModel.new.tap{ |m| m.schedule_attributes = schedule_attributes } }
         subject { scheduled_model.schedule }
 
-        context "given :interval_unit=>none & :date => '1-1-1985'" do
+        context "given :repeat=>0 & :date => '1-1-1985'" do
           let(:schedule_attributes){ { :repeat => '0', :date => '1-1-1985', :interval => '5 (ignore this)' } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
           its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time] }
           its(:rrules){ should be_blank }
         end
 
-        context "given :interval_unit=>none & :dates => ['1-1-1985', '31-12-1985']" do
+        context "given :repeat=>none & :dates => ['1-1-1985', '31-12-1985']" do
           let(:schedule_attributes){ { :repeat => '0', :dates => ['1-1-1985', '31-12-1985'], :interval => '5 (ignore this)' } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
           its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time, Date.new(1985,12,31).to_time] }

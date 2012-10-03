@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'ice_cube', '~> 0.8.0'
   s.add_dependency 'activesupport'
+  s.add_dependency 'tzinfo' # this should be an activesupport dependency!
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'pry'
