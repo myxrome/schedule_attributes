@@ -61,10 +61,10 @@ describe ScheduledModel do
           let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'week', :interval => '3', :monday => '1', :wednesday => '1', :friday => '1' } }
           its(:start_time){ should == Date.new(1985, 1, 1).to_time }
           its(:rrules){ should == [IceCube::Rule.weekly(3).day(:monday, :wednesday, :friday)] }
-          it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-2')).should be_true }
-          it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-4')).should be_true }
-          it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-7')).should be_false }
-          it { subject.occurs_at?(helpers.parse_in_timezone('1985-1-21')).should be_true }
+          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-2')).should be_true }
+          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-4')).should be_true }
+          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-7')).should be_false }
+          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-21')).should be_true }
         end
 
         context "given :interval_unit=>day without :interval" do

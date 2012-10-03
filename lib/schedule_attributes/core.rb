@@ -40,15 +40,15 @@ module ScheduleAttributes
                      options[:start_date]
                    end
 
-      options[:start_time] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone([date_input, options[:start_time]].reject(&:blank?).join(' '))
-      options[:end_time] &&= ScheduleAttributes::TimeHelpers.parse_in_timezone([date_input, options[:end_time]].reject(&:blank?).join(' '))
+      options[:start_time] &&= ScheduleAttributes::TimeHelpers.parse_in_zone([date_input, options[:start_time]].reject(&:blank?).join(' '))
+      options[:end_time] &&= ScheduleAttributes::TimeHelpers.parse_in_zone([date_input, options[:end_time]].reject(&:blank?).join(' '))
       if options[:start_time] && options[:end_time]
         options[:duration] = options[:end_time] - options[:start_time]
       end
 
       if options[:repeat].to_i == 0
         dates = Array(options[:dates] || options[:date]).map do |d|
-          ScheduleAttributes::TimeHelpers.parse_in_timezone([d, options[:start_time]].reject(&:blank?).join(' '))
+          ScheduleAttributes::TimeHelpers.parse_in_zone([d, options[:start_time]].reject(&:blank?).join(' '))
         end
 
         @schedule = IceCube::Schedule.new(dates.first)

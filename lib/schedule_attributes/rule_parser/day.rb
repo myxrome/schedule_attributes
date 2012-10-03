@@ -35,11 +35,11 @@ module ScheduleAttributes::RuleParser
 
     def start_date
       raise ArgumentError unless @options[:start_date]
-      ScheduleAttributes::TimeHelpers.parse_in_timezone(@options[:start_date])
+      ScheduleAttributes::TimeHelpers.parse_in_zone(@options[:start_date])
     end
 
     def end_date
-      @options[:end_date].present? ? ScheduleAttributes::TimeHelpers.parse_in_timezone(@options[:end_date]) : nil
+      @options[:end_date].present? ? ScheduleAttributes::TimeHelpers.parse_in_zone(@options[:end_date]) : nil
     end
 
     def interval
