@@ -1,5 +1,9 @@
 class ScheduleAttributes::FormBuilder < Formtastic::FormBuilder
 
+  def weekdays
+    Hash[ I18n.t('date.day_names').zip(ScheduleAttributes::DAY_NAMES) ]
+  end
+
   def ordinal_month_days
     (1..31).map { |d| [d.ordinalize, d] }
   end
