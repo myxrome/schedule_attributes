@@ -42,8 +42,8 @@ module ScheduleAttributes
                      options[:start_date]
                    end
 
-      options[:start_time] &&= ScheduleAttributes::TimeHelpers.parse_in_zone([date_input, options[:start_time]].reject(&:blank?).join(' '))
-      options[:end_time] &&= ScheduleAttributes::TimeHelpers.parse_in_zone([date_input, options[:end_time]].reject(&:blank?).join(' '))
+      options[:start_time] = TimeHelpers.parse_in_zone([date_input, options[:start_time]].reject(&:blank?).join(' '))
+      options[:end_time] &&= TimeHelpers.parse_in_zone([date_input, options[:end_time]].reject(&:blank?).join(' '))
       if options[:start_time] && options[:end_time]
         options[:duration] = options[:end_time] - options[:start_time]
       end
