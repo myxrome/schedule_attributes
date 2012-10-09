@@ -1,8 +1,10 @@
 require 'active_support/core_ext'
 require 'pry'
-
-RSpec.configure do |config|
-  config.expect_with :rspec
-end
+require 'support/parser_macros'
 
 $: << File.expand_path('../lib')
+
+RSpec.configure do |config|
+  config.include SpecHelpers::ParserMacros
+  config.expect_with :rspec
+end

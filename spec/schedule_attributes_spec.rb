@@ -137,6 +137,26 @@ describe ScheduledModel do
           )
         end
       end
+
+      context "when it has yearly start and end months" do
+        before do
+          schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
+        end
+        specify do
+          subject.yearly_start_month.should == 11
+          subject.yearly_end_month.should == 2
+        end
+
+        context "with exception rules for leading days" do
+          before do
+            schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
+            schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(11).day_of_month(*1..6))
+          end
+          specify do
+            subject.yearly_start_month_day.should == 7
+          end
+        end
+      end
     end
   end
 

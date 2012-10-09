@@ -1,16 +1,16 @@
 module ScheduleAttributes::RuleParser
-  class Week < Day
-    def parse
+  # Parse an options hash to a weekly rule
+  # Weekdays used only if one or more are given, otherwise assume a weekly
+  # schedule starting the day of the :start_date
+  #
+  class Week < Base
+
+    # @return [IceCube::Rule]
+    #
+    def parse_options
       @rule = IceCube::Rule.weekly(interval)
-      @rule = @rule.day(*weekdays) if !weekdays.empty?
-
-      super
+      @rule.day(*weekdays) if !weekdays.empty?
     end
 
-    private
-
-    def weekdays
-      IceCube::TimeUtil::DAYS.keys.select{ |day| @options[day].to_i == 1 }
-    end
   end
 end

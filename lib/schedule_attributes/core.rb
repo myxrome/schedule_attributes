@@ -51,11 +51,14 @@ module ScheduleAttributes
       if repeat
         @schedule = IceCube::Schedule.new(options[:start_time])
 
-        rule = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
-        @schedule.add_recurrence_rule(rule.parse) if rule
+        parser = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
+        @schedule.add_recurrence_rule(parser.rule)
+        parser.exceptions.each do |exrule|
+          @schedule.add_exception_rule(exrule)
+        end
       else
         dates = (options[:dates] || [options[:date]]).map do |d|
-          ScheduleAttributes::TimeHelpers.parse_in_zone([d, options[:start_time]].reject(&:blank?).join(' '))
+          TimeHelpers.parse_in_zone([d, options[:start_time].strftime('%H:%M')].reject(&:blank?).join(' '))
         end
 
         @schedule = IceCube::Schedule.new(dates.first)
@@ -71,8 +74,8 @@ module ScheduleAttributes
     def schedule_attributes
       atts = {}
 
-      atts[:start_time] = schedule.start_time.strftime('%H:%M %p')
-      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime('%H:%M %p')
+      atts[:start_time] = schedule.start_time.strftime('%l:%M %P')
+      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime('%l:%M %P')
 
       if rule = schedule.rrules.first
         atts[:repeat]     = 1
@@ -115,10 +118,32 @@ module ScheduleAttributes
         else
           atts[:ends] = 'never'
         end
+
+        if months = rule.validations_for(:month_of_year).map(&:month)
+          atts[:yearly_start_month] = months.first
+          atts[:yearly_end_month] = months.last
+
+          # get leading & trailing days from exception rules
+          schedule.exrules.each do |x|
+            x.validations_for(:month_of_year).map(&:month).each do |m|
+              days = x.validations_for(:day_of_month).map(&:day)
+
+              if m == atts[:yearly_start_month]
+                atts[:yearly_start_month_day] = days.last + 1 if days.first == 1
+              end
+
+              if m == atts[:yearly_end_month]
+                atts[:yearly_end_month_day] = days.first - 1 if days.last == 31
+              end
+            end
+          end
+
+        end
       else
         atts[:repeat]     = 0
         atts[:interval]   = 1
-        atts[:date]       = schedule.start_time.to_date
+        atts[:date]       = schedule.rtimes.first
+        atts[:dates]      = schedule.rtimes.map(&:to_date)
         atts[:start_date] = Date.today # default for populating the other part of the form
       end
 
