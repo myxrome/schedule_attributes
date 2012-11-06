@@ -2,159 +2,146 @@ require 'spec_helper'
 require 'support/scheduled_model'
 
 describe ScheduledModel do
+
   describe "#schedule" do
-    context "when initialized" do
-      subject { ScheduledModel.new.schedule }
-      it "the schedule should be for every day" do
-        subject.should be_a(IceCube::Schedule)
-        subject.rtimes.should == []
-        subject.start_time.should == Date.today.to_time
-        subject.start_time.should be_a(Time)
-        subject.end_time.should == nil
-        subject.rrules.should == [IceCube::Rule.daily]
-      end
+    subject(:schedule) { ScheduledModel.new.schedule }
+
+    it "should be for every day" do
+      schedule.should be_a(IceCube::Schedule)
+      schedule.rtimes.should == []
+      schedule.start_time.should == Date.today.to_time
+      schedule.end_time.should be nil
+      schedule.rrules.should == [IceCube::Rule.daily]
     end
   end
 
-  describe "#schedule_attributes" do
-    describe "=" do
-      describe "setting the correct schedule" do
-        let(:scheduled_model) { ScheduledModel.new.tap{ |m| m.schedule_attributes = schedule_attributes } }
-        subject { scheduled_model.schedule }
+  describe "#schedule_attributes=" do
+    describe "setting the correct schedule" do
+      let(:scheduled_model) { ScheduledModel.new.tap { |m| m.schedule_attributes = example.metadata[:args] } }
+      subject(:schedule)    { scheduled_model.schedule }
 
-        context "given :repeat=>0 & :date => '1-1-1985'" do
-          let(:schedule_attributes){ { :repeat => '0', :date => '1-1-1985', :interval => '5 (ignore this)' } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time] }
-          its(:rrules){ should be_blank }
-        end
-
-        context "given :repeat=>none & :dates => ['1-1-1985', '31-12-1985']" do
-          let(:schedule_attributes){ { :repeat => '0', :dates => ['1-1-1985', '31-12-1985'], :interval => '5 (ignore this)' } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:all_occurrences){ should == [Date.new(1985, 1, 1).to_time, Date.new(1985,12,31).to_time] }
-          its(:rrules){ should be_blank }
-        end
-
-        context "given :interval_unit=>day" do
-          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day', :interval => '3' } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:rrules){ should == [IceCube::Rule.daily(3)] }
-          it{ subject.first(3).should == [Date.civil(1985, 1, 1), Date.civil(1985, 1, 4), Date.civil(1985, 1, 7)].map(&:to_time) }
-        end
-
-        context "given :interval_unit=>day & :ends=>eventually & :until_date" do
-          let(:schedule_attributes){ { "repeat" => "1", "start_date" => "1-1-1985", "interval_unit" => "day", "interval" => "3", "end_date" => "29-12-1985", "ends" => "eventually" } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:rrules){ should == [ IceCube::Rule.daily(3).until(Date.new(1985, 12, 29).to_time_in_current_zone) ] }
-          it{ subject.first(3).should == [Date.civil(1985, 1, 1), Date.civil(1985, 1, 4), Date.civil(1985, 1, 7)].map(&:to_time) }
-        end
-
-        context "given :interval_unit=>day & :ends=>never & :until_date" do
-          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day', :interval => '3', :until_date => '29-12-1985', :ends => 'never' } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:rrules){ should == [IceCube::Rule.daily(3)] }
-          it{ subject.first(3).should == [Date.civil(1985, 1, 1), Date.civil(1985, 1, 4), Date.civil(1985, 1, 7)].map(&:to_time) }
-        end
-
-        context "given :interval_unit=>week & :mon,:wed,:fri" do
-          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'week', :interval => '3', :monday => '1', :wednesday => '1', :friday => '1' } }
-          its(:start_time){ should == Date.new(1985, 1, 1).to_time }
-          its(:rrules){ should == [IceCube::Rule.weekly(3).day(:monday, :wednesday, :friday)] }
-          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-2')).should be_true }
-          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-4')).should be_true }
-          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-7')).should be_false }
-          it { subject.occurs_at?(helpers.parse_in_zone('1985-1-21')).should be_true }
-        end
-
-        context "given :interval_unit=>day without :interval" do
-          let(:schedule_attributes){ { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day' } }
-          its(:rrules){ should == [IceCube::Rule.daily(1)] }
-        end
+      context args: {repeat: '0', date: '1-1-1985', interval: '5 (ignore this)'} do
+        its(:start_time)      { should == Time.new(1985,1,1) }
+        its(:all_occurrences) { should == [Time.new(1985,1,1)] }
+        its(:rrules)          { should be_blank }
       end
 
-      context "setting the schedule_yaml column" do
-        let(:scheduled_model){ ScheduledModel.new.tap{|m| m.schedule_attributes = { :repeat => '1', :start_date => '1-1-1985', :interval_unit => 'day', :interval => '3' }} }
-        subject{ scheduled_model }
-        let(:expected_schedule){ IceCube::Schedule.from_yaml(scheduled_model.schedule_yaml) }
+      context args: {repeat: '0', dates: ['1-1-1985', '31-12-1985'], interval: '5 (ignore this)'} do
+        its(:start_time)      { should == Time.new(1985,1,1) }
+        its(:all_occurrences) { should == [Time.new(1985,1,1), Time.new(1985,12,31)] }
+        its(:rrules)          { should be_blank }
+      end
 
-        its(:schedule_yaml){ should == scheduled_model.schedule.to_yaml }
-        its(:schedule){ should == expected_schedule }
+      context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
+        its(:start_time) { should == Date.new(1985,1,1).to_time }
+        its(:rrules)     { should == [IceCube::Rule.daily(3)] }
+        specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1985,1,4), Date.civil(1985,1,7)].map(&:to_time) }
+      end
+
+      context args: {repeat: "1", start_date: "1-1-1985", interval_unit: "day", interval: "3", end_date: "29-12-1985", ends: "eventually"} do
+        its(:start_time) { should == Date.new(1985,1,1).to_time }
+        its(:rrules)     { should == [ IceCube::Rule.daily(3).until(Date.new(1985,12,29).to_time_in_current_zone) ] }
+        specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1985,1,4), Date.civil(1985,1,7)].map(&:to_time) }
+      end
+
+      context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3', until_date: '29-12-1985', ends: 'never'} do
+        its(:start_time) { should == Date.new(1985,1,1).to_time }
+        its(:rrules)     { should == [IceCube::Rule.daily(3)] }
+        specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1985,1,4), Date.civil(1985,1,7)].map(&:to_time) }
+      end
+
+      context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'week', interval: '3', monday: '1', wednesday: '1', friday: '1'} do
+        its(:start_time) { should == Date.new(1985,1,1).to_time }
+        its(:rrules)     { should == [IceCube::Rule.weekly(3).day(:monday, :wednesday, :friday)] }
+        specify          { schedule.occurs_at?(helpers.parse_in_zone('1985-1-2')).should be_true }
+        specify          { schedule.occurs_at?(helpers.parse_in_zone('1985-1-4')).should be_true }
+        specify          { schedule.occurs_at?(helpers.parse_in_zone('1985-1-7')).should be_false }
+        specify          { schedule.occurs_at?(helpers.parse_in_zone('1985-1-21')).should be_true }
+      end
+
+      context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day'} do
+        its(:rrules) { should == [IceCube::Rule.daily(1)] }
       end
     end
 
+    describe "setting the schedule_yaml column", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
+      let(:scheduled_model) { ScheduledModel.new.tap { |m| m.schedule_attributes = example.metadata[:args] } }
+      subject               { scheduled_model }
 
-    describe "providing the correct attributes" do
-      require 'ostruct'
+      its(:schedule_yaml) { should == scheduled_model.schedule.to_yaml }
+      its(:schedule)      { should == IceCube::Schedule.from_yaml(scheduled_model.schedule_yaml) }
+    end
 
-      let(:scheduled_model){ ScheduledModel.new }
-      subject{ scheduled_model.schedule_attributes }
-      before{ scheduled_model.stub(:schedule => schedule) }
-      let(:schedule){ IceCube::Schedule.new(Date.tomorrow.to_time) }
+  end
 
-      context "when it's a 1-time thing" do
-        before{ schedule.add_recurrence_time(Date.tomorrow.to_time) }
-        it{ should == OpenStruct.new(:repeat => 0, :interval => 1, :date => Date.tomorrow, :start_date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
-        its(:date){ should be_a(Date) }
+  describe "schedule_attributes" do
+    let(:scheduled_model) { ScheduledModel.new }
+    let(:schedule)        { IceCube::Schedule.new(Date.tomorrow.to_time) }
+    subject               { scheduled_model.schedule_attributes }
+    before                { scheduled_model.stub(schedule: schedule) }
+
+    context "for a single date" do
+      before { schedule.add_recurrence_time(Date.tomorrow.to_time) }
+      it     { should == OpenStruct.new(repeat: 0, interval: 1, date: Date.tomorrow, dates: [Date.tomorrow], start_date: Date.today, start_time: "00:00 AM", end_time: "00:00 AM") }
+      its(:date) { should be_a(Date) }
+    end
+
+    context "when it repeats daily" do
+      before do
+        schedule.add_recurrence_rule(IceCube::Rule.daily(4))
+      end
+      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
+      its(:start_date){ should be_a(Date) }
+    end
+
+    context "when it repeats with an end date" do
+      before do
+        schedule.add_recurrence_rule(IceCube::Rule.daily(4).until((Date.today+10).to_time))
+      end
+      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
+      its(:start_date){ should be_a(Date) }
+      its(:end_date){ should be_a(Date) }
+    end
+
+    context "when it repeats weekly" do
+      before do
+        schedule.add_recurrence_time(Date.tomorrow)
+        schedule.add_recurrence_rule(IceCube::Rule.weekly(4).day(:monday, :wednesday, :friday))
+      end
+      it do
+        should == OpenStruct.new(
+          :repeat        => 1,
+          :start_date    => Date.tomorrow,
+          :interval_unit => 'week',
+          :interval      => 4,
+          :ends          => 'never',
+          :monday        => 1,
+          :wednesday     => 1,
+          :friday        => 1,
+          :start_time    => "00:00 AM",
+          :end_time      => "00:00 AM",
+
+          :date          => Date.today #for the form
+        )
+      end
+    end
+
+    context "when it has yearly start and end months" do
+      before do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
+      end
+      specify do
+        subject.yearly_start_month.should == 11
+        subject.yearly_end_month.should == 2
       end
 
-      context "when it repeats daily" do
-        before do
-          schedule.add_recurrence_rule(IceCube::Rule.daily(4))
-        end
-        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
-        its(:start_date){ should be_a(Date) }
-      end
-
-      context "when it repeats with an end date" do
-        before do
-          schedule.add_recurrence_rule(IceCube::Rule.daily(4).until((Date.today+10).to_time))
-        end
-        it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
-        its(:start_date){ should be_a(Date) }
-        its(:end_date){ should be_a(Date) }
-      end
-
-      context "when it repeats weekly" do
-        before do
-          schedule.add_recurrence_time(Date.tomorrow)
-          schedule.add_recurrence_rule(IceCube::Rule.weekly(4).day(:monday, :wednesday, :friday))
-        end
-        it do
-          should == OpenStruct.new(
-            :repeat        => 1,
-            :start_date    => Date.tomorrow,
-            :interval_unit => 'week',
-            :interval      => 4,
-            :ends          => 'never',
-            :monday        => 1,
-            :wednesday     => 1,
-            :friday        => 1,
-            :start_time    => "00:00 AM",
-            :end_time      => "00:00 AM",
-
-            :date          => Date.today #for the form
-          )
-        end
-      end
-
-      context "when it has yearly start and end months" do
+      context "with exception rules for leading days" do
         before do
           schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
+          schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(11).day_of_month(*1..6))
         end
         specify do
-          subject.yearly_start_month.should == 11
-          subject.yearly_end_month.should == 2
-        end
-
-        context "with exception rules for leading days" do
-          before do
-            schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
-            schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(11).day_of_month(*1..6))
-          end
-          specify do
-            subject.yearly_start_month_day.should == 7
-          end
+          subject.yearly_start_month_day.should == 7
         end
       end
     end

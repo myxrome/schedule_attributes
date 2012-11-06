@@ -1,45 +1,25 @@
 module ScheduleAttributes::RuleParser
   class Base
-    # Rules don't actually apply the :start_date option except as a potential
-    # default when parsing. The :start_date is used for building the schedule
-    # that the rule is attached to. However, rules can still an "until"
-    # :end_date inside their containing schedule. Currently we don't expose
-    # separate end dates for individual rules.
-    #
     # @param [Hash] options
-    # @option [String] :interval
-    # @option [String] :end_date
     #
-    def initialize(options)
-      @options = options.with_indifferent_access
-      @rule ||= rule_factory.daily(interval)
+    def initialize(input)
+      @input = input
+      @rule ||= rule_factory.daily(input.interval)
       @exceptions ||= []
     end
 
+    attr_reader :input
+
     def rule
       parse_options
-      if @options[:end_date].present? && @options[:ends] != "never"
-        @rule.until(end_date)
-      end
+      set_end_date
+      set_yearly_months
+
       @rule
     end
 
     def exceptions
-      if (start_month? || end_month?) && (yearly_months.length < 12)
-        @rule.month_of_year(*yearly_months)
-      end
-
-      if start_day?
-        @exceptions << rule_factory.daily
-                      .month_of_year(start_month)
-                      .day_of_month(*1...start_day)
-      end
-
-      if end_day?
-        @exceptions << rule_factory.daily
-                       .month_of_year(end_month)
-                       .day_of_month(*(end_day+1)..31)
-      end
+      set_yearly_month_exceptions
 
       @exceptions
     end
@@ -50,21 +30,28 @@ module ScheduleAttributes::RuleParser
       IceCube::Rule
     end
 
-    def start_date
-      return Time.now unless @options[:start_date].present?
-      TimeHelpers.parse_in_zone(@options[:start_date])
+    def set_end_date
+      @rule.until(input.end_date) if input.ends?
     end
 
-    def end_date
-      @options[:end_date].present? ? TimeHelpers.parse_in_zone(@options[:end_date]) : nil
+    def set_yearly_months
+      if (input.yearly_start_month? || input.yearly_end_month?) && (yearly_months.length < 12)
+        @rule.month_of_year(*yearly_months)
+      end
     end
 
-    def interval
-      [@options[:interval].to_i, 1].max
-    end
+    def set_yearly_month_exceptions
+      if input.yearly_start_month_day?
+        @exceptions << rule_factory.daily
+                      .month_of_year(start_month)
+                      .day_of_month(*1...start_day)
+      end
 
-    def weekdays
-      IceCube::TimeUtil::DAYS.keys.select{ |day| @options[day].to_i == 1 }
+      if input.yearly_end_month_day?
+        @exceptions << rule_factory.daily
+                       .month_of_year(end_month)
+                       .day_of_month(*(end_day+1)..31)
+      end
     end
 
     def yearly_months
@@ -74,36 +61,20 @@ module ScheduleAttributes::RuleParser
       range.group_by(&:month).keys
     end
 
-    def start_month?
-      @options[:yearly_start_month].present?
-    end
-
-    def end_month?
-      @options[:yearly_end_month].present?
-    end
-
-    def start_day?
-      @options[:yearly_start_month_day].present?
-    end
-
-    def end_day?
-      @options[:yearly_end_month_day].present?
-    end
-
     def start_month
-      param_to_month @options[:yearly_start_month], 1
+      param_to_month(input.yearly_start_month, 1)
     end
 
     def end_month
-      param_to_month @options[:yearly_end_month], 12
+      param_to_month(input.yearly_end_month, 12)
     end
 
     def start_day
-      param_to_day @options[:yearly_start_month_day], 1
+      param_to_day(input.yearly_start_month_day, 1)
     end
 
     def end_day
-      param_to_day @options[:yearly_end_month_day], 31
+      param_to_day(input.yearly_end_month_day, 31)
     end
 
     def param_to_month(param, default)

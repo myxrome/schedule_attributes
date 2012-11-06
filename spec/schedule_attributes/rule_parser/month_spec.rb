@@ -1,11 +1,13 @@
 require 'spec_helper'
 require 'ice_cube'
 require 'schedule_attributes/rule_parser'
+require 'schedule_attributes/input'
 
 describe ScheduleAttributes::RuleParser::Month do
 
   describe "#rule" do
-    let(:parser) { described_class.new(example.metadata[:args]) }
+    let(:input)  { ScheduleAttributes::Input.new(example.metadata[:args]) }
+    let(:parser) { described_class.new(input) }
     subject      { parser.rule }
 
     let(:t) { Date.current }
@@ -20,7 +22,7 @@ describe ScheduleAttributes::RuleParser::Month do
       its_occurrences_until(3.months.from_now) { should == monthly }
     end
 
-    context args: {"start_date" => "2012-03-14", "interval" => "2"} do
+    context args: {"start_date" => "2000-03-14", "interval" => "2"} do
       it { should == IceCube::Rule.monthly(2) }
       its_occurrences_until(6.months.from_now) { should == bimonthly }
     end
@@ -34,8 +36,8 @@ describe ScheduleAttributes::RuleParser::Month do
       it { should == IceCube::Rule.monthly.day_of_week(:tuesday => 2) }
     end
 
-    context args: {"start_date" => "2012-03-14", "end_date" => "2012-06-14"} do
-      it { should == IceCube::Rule.monthly.until(Time.new(2012,6,14)) }
+    context args: {"start_date" => "2000-03-14", "end_date" => "2000-06-14"} do
+      it { should == IceCube::Rule.monthly.until(Time.new(2000,6,14)) }
     end
   end
 end

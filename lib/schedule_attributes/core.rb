@@ -5,7 +5,7 @@ require 'ice_cube'
 require 'ostruct'
 require 'schedule_attributes/configuration'
 require 'schedule_attributes/extensions/ice_cube'
-require 'schedule_attributes/time_helpers'
+require 'schedule_attributes/input'
 require 'schedule_attributes/rule_parser'
 
 module ScheduleAttributes
@@ -43,51 +43,32 @@ module ScheduleAttributes
     end
 
     def schedule_attributes=(options)
-      options = options.with_indifferent_access
-      options[:interval] = options.fetch(:interval, 1).to_i
+      input = ScheduleAttributes::Input.new(options)
+      @schedule = IceCube::Schedule.new(input.start_time)
 
-      repeat = [false, 0, "false", "0", "none"].none? { |v| options[:repeat] == v }
-
-      date_input = if repeat
-                     options[:dates] ? options[:dates].first : options[:date]
-                   else
-                     options[:start_date]
-                   end
-
-      options[:start_time] = TimeHelpers.parse_in_zone([date_input, options[:start_time]].reject(&:blank?).join(' '))
-      options[:end_time] &&= TimeHelpers.parse_in_zone([date_input, options[:end_time]].reject(&:blank?).join(' '))
-      if options[:start_time] && options[:end_time]
-        options[:duration] = options[:end_time] - options[:start_time]
-      end
-
-      if repeat
-        @schedule = IceCube::Schedule.new(options[:start_time])
-
-        parser = ScheduleAttributes::RuleParser[options[:interval_unit]].new(options)
+      if input.repeat?
+        parser = ScheduleAttributes::RuleParser[input.interval_unit].new(input)
         @schedule.add_recurrence_rule(parser.rule)
         parser.exceptions.each do |exrule|
           @schedule.add_exception_rule(exrule)
         end
       else
-        dates = (options[:dates] || [options[:date]]).map do |d|
-          TimeHelpers.parse_in_zone([d, options[:start_time].strftime('%H:%M')].reject(&:blank?).join(' '))
+        input.dates.each do |d|
+          @schedule.add_recurrence_time(d)
         end
-
-        @schedule = IceCube::Schedule.new(dates.first)
-
-        dates.each { |d| @schedule.add_recurrence_time(d) }
       end
 
-      @schedule.duration = options[:duration] if options[:duration]
+      @schedule.duration = input.duration if input.duration
 
       write_schedule_attributes(@schedule.to_yaml)
     end
 
     def schedule_attributes
       atts = {}
+      time_format = ScheduleAttributes.configuration.time_format
 
-      atts[:start_time] = schedule.start_time.strftime('%l:%M %P')
-      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime('%l:%M %P')
+      atts[:start_time] = schedule.start_time.strftime(time_format)
+      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime(time_format)
 
       if rule = schedule.rrules.first
         atts[:repeat]     = 1
@@ -154,12 +135,12 @@ module ScheduleAttributes
       else
         atts[:repeat]     = 0
         atts[:interval]   = 1
-        atts[:date]       = schedule.rtimes.first
+        atts[:date]       = schedule.rtimes.first.to_date
         atts[:dates]      = schedule.rtimes.map(&:to_date)
         atts[:start_date] = Date.today # default for populating the other part of the form
       end
 
-      OpenStruct.new(atts)
+      OpenStruct.new(atts.delete_if { |k,v| v.blank? })
     end
 
     protected

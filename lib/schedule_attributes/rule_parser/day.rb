@@ -4,7 +4,8 @@ module ScheduleAttributes::RuleParser
     # @return [IceCube::Rule]
     #
     def parse_options
-      @rule = rule_factory.daily(interval)
+      @rule = rule_factory.daily(input.interval)
     end
+
   end
 end

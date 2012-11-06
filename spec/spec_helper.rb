@@ -1,4 +1,5 @@
 require 'active_support/core_ext'
+require 'ostruct'
 require 'pry'
 require 'support/parser_macros'
 

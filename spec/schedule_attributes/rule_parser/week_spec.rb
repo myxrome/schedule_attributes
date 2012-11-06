@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'ice_cube'
 require 'schedule_attributes/rule_parser'
+require 'schedule_attributes/input'
 
 describe ScheduleAttributes::RuleParser::Week do
   let(:t)   { Date.current.to_time }
@@ -13,7 +14,8 @@ describe ScheduleAttributes::RuleParser::Week do
   let(:weekends)      { [sat, sun, sat+1.week, sun+1.week, sat+2.weeks, sun+2.weeks] }
 
   describe "#rule" do
-    let(:parser) { described_class.new(example.metadata[:args]) }
+    let(:input)  { ScheduleAttributes::Input.new(example.metadata[:args]) }
+    let(:parser) { described_class.new(input) }
     subject      { parser.rule }
 
     context args: {} do

@@ -1,9 +1,11 @@
 require 'spec_helper'
 require 'ice_cube'
 require 'schedule_attributes/rule_parser'
+require 'schedule_attributes/input'
 
 describe ScheduleAttributes::RuleParser::Day do
-  let(:parser) { described_class.new(example.metadata[:args]) }
+  let(:input)  { ScheduleAttributes::Input.new(example.metadata[:args]) }
+  let(:parser) { described_class.new(input) }
   let(:t)      { Date.current.to_time }
 
   describe "#rule" do
@@ -16,14 +18,14 @@ describe ScheduleAttributes::RuleParser::Day do
       its_occurrences_until(8.days.from_now) { should == every_day }
     end
 
-    context args: {"interval" => "2"} do
+    context args: {interval: 2} do
       let(:every_other_day) { [t, t+2.days, t+4.days, t+6.days, t+8.days] }
 
       it { should == IceCube::Rule.daily(2) }
       its_occurrences_until(8.days.from_now) { should == every_other_day }
     end
 
-    context args: {"end_date" => "2014-01-30"} do
+    context args: {end_date: '2014-01-30'} do
       let(:t)           { Time.new(2014,01,30) }
       let(:last_5_days) { [t-4.days, t-3.days, t-2.days, t-1.day, t] }
 
@@ -31,30 +33,21 @@ describe ScheduleAttributes::RuleParser::Day do
       its_occurrences_until(Time.new(2014,02,01)) { subject[-5..-1].should == last_5_days }
     end
 
-    context args: {
-      "yearly_start_month" => "1",
-      "yearly_end_month"   => "12"
-    } do
+    context args: {yearly_start_month: 1, yearly_end_month: 12} do
       it { should == IceCube::Rule.daily }
     end
 
-    context args: {
-      "yearly_start_month" => "6",
-      "yearly_end_month"   => "8"
-    } do
+    context args: {yearly_start_month: 6, yearly_end_month: 8} do
       it { should == IceCube::Rule.daily.month_of_year(6,7,8) }
     end
 
-    context args: {
-      "yearly_start_month" => "11",
-      "yearly_end_month"   => "2"
-    } do
+    context args: {yearly_start_month: 11, yearly_end_month: 2} do
       it { should == IceCube::Rule.daily.month_of_year(11,12,1,2) }
     end
 
     context args: {
-      "yearly_start_month" => "3", "yearly_start_month_day"   => "14",
-      "yearly_end_month"   => "3", "yearly_end_month_day"     => "17"
+      yearly_start_month: 3, yearly_start_month_day: 14,
+      yearly_end_month:   3, yearly_end_month_day:   17
     } do
       it { should == IceCube::Rule.daily.month_of_year(3) }
     end
@@ -64,8 +57,8 @@ describe ScheduleAttributes::RuleParser::Day do
     subject      { parser.exceptions }
 
     context args: {
-      "yearly_start_month" => "3", "yearly_start_month_day"   => "4",
-      "yearly_end_month"   => "3", "yearly_end_month_day"     => "26"
+      yearly_start_month: 3, yearly_start_month_day: 4,
+      yearly_end_month:   3, yearly_end_month_day:   26
     } do
       it "returns exceptions for the leading & trailing days" do
         should == [
@@ -75,30 +68,19 @@ describe ScheduleAttributes::RuleParser::Day do
       end
     end
 
-    context args: {
-      "yearly_start_month" => "3", "yearly_start_month_day"   => "",
-      "yearly_end_month"   => "3", "yearly_end_month_day"     => ""
-    } do
+    context args: {yearly_start_month: 3, yearly_end_month: 3} do
       it "has no trailing exceptions" do
         should == []
       end
     end
 
-    context args: {
-      "yearly_start_month" => "3", "yearly_start_month_day"   => "",
-      "yearly_end_month"   => "4", "yearly_end_month_day"     => "25"
-    } do
+    context args: {yearly_start_month: 3, yearly_end_month: 4, yearly_end_month_day: 25} do
       it "returns exceptions for the trailing day only" do
-        should == [
-          IceCube::Rule.daily.month_of_year(4).day_of_month(*26..31)
-        ]
+        should == [IceCube::Rule.daily.month_of_year(4).day_of_month(*26..31)]
       end
     end
 
-    context args: {
-      "yearly_start_month" => "3", "yearly_start_month_day"   => "3",
-      "yearly_end_month"   => "4", "yearly_end_month_day"     => ""
-    } do
+    context args: {yearly_start_month: 3, yearly_start_month_day: 3, yearly_end_month: 4} do
       it "returns exceptions for the trailing day only" do
         should == [
           IceCube::Rule.daily.month_of_year(3).day_of_month(*1..2)
