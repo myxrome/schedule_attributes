@@ -3,6 +3,7 @@ require 'active_support/concern'
 require 'active_support/time_with_zone'
 require 'ice_cube'
 require 'ostruct'
+require 'schedule_attributes/configuration'
 require 'schedule_attributes/extensions/ice_cube'
 require 'schedule_attributes/time_helpers'
 require 'schedule_attributes/rule_parser'
@@ -11,8 +12,19 @@ module ScheduleAttributes
   DEFAULT_ATTRIBUTE_KEY = :schedule_yaml
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
-  def self.parse_rule(options)
-    RuleParser[options[:interval_unit]].parse(options)
+  class << self
+    def configure
+      @configuration ||= Configuration.new
+      if block_given?
+        yield
+      end
+      return @configuration
+    end
+    alias_method :configuration, :configure
+
+    def parse_rule(options)
+      RuleParser[options[:interval_unit]].parse(options)
+    end
   end
 
   module Core
