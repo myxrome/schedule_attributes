@@ -32,6 +32,16 @@ describe ScheduledModel do
         its(:rrules)          { should be_blank }
       end
 
+      context args: {repeat: '0', dates: ['1-1-1985', '31-12-1985'], start_time: '12:00', end_time: '14:00', interval: '5 (ignore this)'} do
+        its(:start_time)      { should == Time.new(1985,1,1,12,0) }
+        its(:duration)        { should == 7200 }
+        its(:all_occurrences) { should == [Time.new(1985,1,1,12,0), Time.new(1985,12,31,12,0)] }
+        its(:rrules)          { should be_blank }
+        specify               { schedule.occurring_between?(helpers.parse_in_zone('1985-1-1 12:00'), helpers.parse_in_zone('1985-6-25 14:00')).should be_true }
+        specify               { schedule.occurs_at?(helpers.parse_in_zone('1985-1-1 12:00')).should be_true }
+        specify               { schedule.occurs_at?(helpers.parse_in_zone('1985-6-6 15:00')).should be_false }
+      end
+
       context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
         its(:start_time) { should == Date.new(1985,1,1).to_time }
         its(:rrules)     { should == [IceCube::Rule.daily(3)] }
@@ -82,7 +92,7 @@ describe ScheduledModel do
 
     context "for a single date" do
       before { schedule.add_recurrence_time(Date.tomorrow.to_time) }
-      it     { should == OpenStruct.new(repeat: 0, interval: 1, date: Date.tomorrow, dates: [Date.tomorrow], start_date: Date.today, start_time: "00:00 AM", end_time: "00:00 AM") }
+      it     { should == OpenStruct.new(repeat: 0, interval: 1, date: Date.tomorrow, dates: [Date.tomorrow], start_date: Date.today, start_time: "00:00", end_time: "00:00") }
       its(:date) { should be_a(Date) }
     end
 
@@ -90,7 +100,7 @@ describe ScheduledModel do
       before do
         schedule.add_recurrence_rule(IceCube::Rule.daily(4))
       end
-      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
+      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00", :end_time => "00:00") }
       its(:start_date){ should be_a(Date) }
     end
 
@@ -98,7 +108,7 @@ describe ScheduledModel do
       before do
         schedule.add_recurrence_rule(IceCube::Rule.daily(4).until((Date.today+10).to_time))
       end
-      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00 AM", :end_time => "00:00 AM") }
+      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00", :end_time => "00:00") }
       its(:start_date){ should be_a(Date) }
       its(:end_date){ should be_a(Date) }
     end
@@ -118,8 +128,8 @@ describe ScheduledModel do
           :monday        => 1,
           :wednesday     => 1,
           :friday        => 1,
-          :start_time    => "00:00 AM",
-          :end_time      => "00:00 AM",
+          :start_time    => "00:00",
+          :end_time      => "00:00",
 
           :date          => Date.today #for the form
         )

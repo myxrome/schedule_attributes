@@ -131,8 +131,8 @@ module ScheduleAttributes
 
     def dates
       dates = (@params[:dates] || [@params[:date]]).compact
-      time = @params[:start_time].strftime('%H:%M') if @params[:start_time]
-      dates.map { |d| parse_date_time(d) }
+      time = start_time.strftime('%H:%M') if @params[:start_time]
+      dates.map { |d| parse_date_time(d, time) }
     end
 
     private

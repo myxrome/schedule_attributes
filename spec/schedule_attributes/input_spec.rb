@@ -122,5 +122,9 @@ describe ScheduleAttributes::Input do
     context args: {dates: ['2000-01-02','2000-02-03']} do
       it { should == [Time.new(2000,1,2), Time.new(2000,2,3)] }
     end
+
+    context args: {repeat: '0', date: '2000-06-06', start_date: '2000-06-06', start_time: '12:00'} do
+      it { should == [Time.new(2000,6,6,12,0)] }
+    end
   end
 end
