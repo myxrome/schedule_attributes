@@ -13,15 +13,6 @@ module ScheduleAttributes
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
   class << self
-    def configure
-      @configuration ||= Configuration.new
-      if block_given?
-        yield
-      end
-      return @configuration
-    end
-    alias_method :configuration, :configure
-
     def parse_rule(options)
       RuleParser[options[:interval_unit]].parse(options)
     end
