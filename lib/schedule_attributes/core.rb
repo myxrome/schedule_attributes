@@ -94,6 +94,8 @@ module ScheduleAttributes
             atts[:ordinal_day]  = day_of_month.first
             atts[:ordinal_unit] = 'day'
           end
+        when IceCube::YearlyRule
+          atts[:interval_unit] = 'year'
         end
 
         if rule.until_time

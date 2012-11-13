@@ -72,6 +72,12 @@ describe ScheduledModel do
       context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day'} do
         its(:rrules) { should == [IceCube::Rule.daily(1)] }
       end
+
+      context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'year'} do
+        its(:start_time) { should == Date.new(1985,1,1).to_time }
+        its(:rrules)     { should == [IceCube::Rule.yearly.day_of_month(1).month_of_year(1)] }
+        specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1986,1,1), Date.civil(1987,1,1)].map(&:to_time) }
+      end
     end
 
     describe "setting the schedule_yaml column", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
@@ -128,6 +134,26 @@ describe ScheduledModel do
           :monday        => 1,
           :wednesday     => 1,
           :friday        => 1,
+          :start_time    => "00:00",
+          :end_time      => "00:00",
+
+          :date          => Date.today #for the form
+        )
+      end
+    end
+
+    context "when it repeats yearly" do
+      before do
+        schedule.add_recurrence_time(Date.tomorrow)
+        schedule.add_recurrence_rule(IceCube::Rule.yearly)
+      end
+      it do
+        should == OpenStruct.new(
+          :repeat        => 1,
+          :start_date    => Date.tomorrow,
+          :interval_unit => 'year',
+          :interval      => 1,
+          :ends          => 'never',
           :start_time    => "00:00",
           :end_time      => "00:00",
 
