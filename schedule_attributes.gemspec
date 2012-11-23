@@ -6,11 +6,11 @@ Gem::Specification.new do |s|
   s.name        = "schedule_attributes"
   s.version     = ScheduleAttributes::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Mike Nicholaides"]
-  s.email       = ["mike@ablegray.com"]
-  s.homepage    = "http://ablegray.com"
-  s.summary     = %q{Provides form attributes setting a recurring schedule.}
-  s.description = %q{Provides form attributes setting a recurring schedule.}
+  s.authors     = ["Andrew Vit", "Mike Nicholaides"]
+  s.email       = ["andrew@avit.ca", "mike@ablegray.com"]
+  s.homepage    = "https://github.com/avit/schedule_attributes"
+  s.summary     = %q{Handle form inputs for IceCube schedules}
+  s.description = %q{Converts to/from date & time inputs for managing scheduled models.}
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
