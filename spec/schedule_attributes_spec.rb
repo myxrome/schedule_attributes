@@ -84,8 +84,7 @@ describe ScheduledModel do
       let(:scheduled_model) { ScheduledModel.new.tap { |m| m.schedule_attributes = example.metadata[:args] } }
       subject               { scheduled_model }
 
-      its(:schedule_yaml) { should == scheduled_model.schedule.to_yaml }
-      its(:schedule)      { should == IceCube::Schedule.from_yaml(scheduled_model.schedule_yaml) }
+      its(:schedule) { should == IceCube::Schedule.new(Date.new(1985,1,1).to_time).tap { |s| s.add_recurrence_rule IceCube::Rule.daily(3) }  }
     end
 
   end
