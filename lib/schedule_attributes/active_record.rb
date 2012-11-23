@@ -1,4 +1,5 @@
 require 'schedule_attributes/core'
+require 'schedule_attributes/serializer'
 
 module ScheduleAttributes::ActiveRecord
   extend ActiveSupport::Concern
@@ -6,13 +7,15 @@ module ScheduleAttributes::ActiveRecord
 
   module ClassMethods
     attr_accessor :schedule_field
+    attr_accessor :default_schedule
   end
 
   module Sugar
     def has_schedule_attributes(options={:column_name => :schedule})
-      key = options[:column_name] || ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
-      @schedule_field = key
-      serialize key, YAML
+      options[:column_name] ||= ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
+      @schedule_field = options[:column_name]
+      @default_schedule = options[:default_schedule] || ScheduleAttributes.default_schedule
+      serialize @schedule_field, ScheduleAttributes::Serializer
       include ScheduleAttributes::ActiveRecord
     end
   end
@@ -23,8 +26,13 @@ module ScheduleAttributes::ActiveRecord
 
   private
 
+  def initialize(*args)
+    super
+    self[self.class.schedule_field] ||= self.class.default_schedule
+  end
+
   def read_schedule_field
-    self[self.class.schedule_field]
+    send self[self.class.schedule_field] or self.class.default_schedule
   end
 
   def write_schedule_field(value)
