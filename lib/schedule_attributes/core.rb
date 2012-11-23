@@ -9,7 +9,7 @@ require 'schedule_attributes/input'
 require 'schedule_attributes/rule_parser'
 
 module ScheduleAttributes
-  DEFAULT_ATTRIBUTE_KEY = :schedule_yaml
+  DEFAULT_ATTRIBUTE_KEY = :schedule
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
   class << self

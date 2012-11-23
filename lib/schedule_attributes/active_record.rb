@@ -9,7 +9,7 @@ module ScheduleAttributes::ActiveRecord
   end
 
   module Sugar
-    def has_schedule_attributes(options={:column_name => :schedule_yaml})
+    def has_schedule_attributes(options={:column_name => :schedule})
       key = options[:column_name] || ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
       @schedule_attributes_key = key
       include ScheduleAttributes::ActiveRecord
