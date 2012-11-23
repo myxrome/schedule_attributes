@@ -136,7 +136,7 @@ module ScheduleAttributes
       OpenStruct.new(atts.delete_if { |k,v| v.blank? })
     end
 
-    protected
+    private
 
     def read_schedule_attributes_column
       public_method(self.class.schedule_column).call

@@ -28,7 +28,7 @@ module ScheduleAttributes::ActiveRecord
     end
   end
 
-  protected
+  private
 
   def read_schedule_attributes
     read_attribute(self.class.schedule_attributes_key)

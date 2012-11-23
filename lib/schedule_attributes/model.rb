@@ -15,7 +15,7 @@ module ScheduleAttributes::Model
     end
   end
 
-  protected
+  private
 
   def read_schedule_attributes
     send(self.class.schedule_attributes_key)
