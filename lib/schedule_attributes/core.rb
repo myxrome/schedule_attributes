@@ -13,6 +13,12 @@ module ScheduleAttributes
   DAY_NAMES = Date::DAYNAMES.map(&:downcase).map(&:to_sym)
 
   class << self
+    def default_schedule
+      IceCube::Schedule.new(Date.today.to_time).tap do |s|
+        s.add_recurrence_rule(IceCube::Rule.daily)
+      end
+    end
+
     def parse_rule(options)
       RuleParser[options[:interval_unit]].parse(options)
     end
@@ -21,42 +27,31 @@ module ScheduleAttributes
   module Core
     extend ActiveSupport::Concern
 
-    def schedule
-      @schedule ||= begin
-        unless (serialization = read_schedule_attributes).blank?
-          IceCube::Schedule.from_yaml(serialization)
-        else
-          IceCube::Schedule.new(Date.today.to_time).tap do |s|
-            s.add_recurrence_rule(IceCube::Rule.daily)
-          end
-        end
-      end
-    end
-
     def schedule_attributes=(options)
       input = ScheduleAttributes::Input.new(options)
-      @schedule = IceCube::Schedule.new(input.start_time)
+      new_schedule = IceCube::Schedule.new(input.start_time)
 
       if input.repeat?
         parser = ScheduleAttributes::RuleParser[input.interval_unit].new(input)
-        @schedule.add_recurrence_rule(parser.rule)
+        new_schedule.add_recurrence_rule(parser.rule)
         parser.exceptions.each do |exrule|
-          @schedule.add_exception_rule(exrule)
+          new_schedule.add_exception_rule(exrule)
         end
       else
         input.dates.each do |d|
-          @schedule.add_recurrence_time(d)
+          new_schedule.add_recurrence_time(d)
         end
       end
 
-      @schedule.duration = input.duration if input.duration
+      new_schedule.duration = input.duration if input.duration
 
-      write_schedule_attributes(@schedule.to_yaml)
+      write_schedule_field(new_schedule)
     end
 
     def schedule_attributes
       atts = {}
       time_format = ScheduleAttributes.configuration.time_format
+      schedule = read_schedule_field || ScheduleAttributes.default_schedule
 
       atts[:start_time] = schedule.start_time.strftime(time_format)
       atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime(time_format)
@@ -138,12 +133,5 @@ module ScheduleAttributes
 
     private
 
-    def read_schedule_attributes_column
-      public_method(self.class.schedule_column).call
-    end
-
-    def write_schedule_attributes_column(value)
-      public_method("#{self.class.schedule_column}=").call(value)
-    end
   end
 end

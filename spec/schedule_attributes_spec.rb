@@ -6,7 +6,7 @@ describe ScheduledModel do
   describe "#schedule" do
     subject(:schedule) { ScheduledModel.new.schedule }
 
-    it "should be for every day" do
+    it "should default to a daily schedule" do
       schedule.should be_a(IceCube::Schedule)
       schedule.rtimes.should == []
       schedule.start_time.should == Date.today.to_time
@@ -80,7 +80,7 @@ describe ScheduledModel do
       end
     end
 
-    describe "setting the schedule_yaml column", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
+    describe "setting the schedule field", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
       let(:scheduled_model) { ScheduledModel.new.tap { |m| m.schedule_attributes = example.metadata[:args] } }
       subject               { scheduled_model }
 

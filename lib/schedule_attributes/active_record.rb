@@ -5,37 +5,30 @@ module ScheduleAttributes::ActiveRecord
   include ScheduleAttributes::Core
 
   module ClassMethods
-    attr_accessor :schedule_attributes_key
+    attr_accessor :schedule_field
   end
 
   module Sugar
     def has_schedule_attributes(options={:column_name => :schedule})
       key = options[:column_name] || ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
-      @schedule_attributes_key = key
+      @schedule_field = key
+      serialize key, YAML
       include ScheduleAttributes::ActiveRecord
     end
   end
 
-  def schedule=(new_schedule)
-    write_schedule_attributes(new_schedule.to_yaml)
-    @schedule = new_schedule
-  end
-
   included do
-    unless @schedule_attributes_key
-      key = ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
-      @schedule_attributes_key = key
-    end
+    @schedule_field ||= ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
   end
 
   private
 
-  def read_schedule_attributes
-    read_attribute(self.class.schedule_attributes_key)
+  def read_schedule_field
+    self[self.class.schedule_field]
   end
 
-  def write_schedule_attributes(value)
-    write_attribute(self.class.schedule_attributes_key, value)
+  def write_schedule_field(value)
+    self[self.class.schedule_field] = value
   end
 end
 

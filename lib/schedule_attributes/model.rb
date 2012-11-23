@@ -5,23 +5,20 @@ module ScheduleAttributes::Model
   include ScheduleAttributes::Core
 
   module ClassMethods
-    attr_accessor :schedule_attributes_key
+    attr_accessor :schedule_field
   end
 
   included do
-    unless @schedule_attributes_key
-      column_name = ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
-      @schedule_attributes_key = column_name
-    end
+    @schedule_field ||= ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
   end
 
   private
 
-  def read_schedule_attributes
-    send(self.class.schedule_attributes_key)
+  def read_schedule_field
+    send(self.class.schedule_field)
   end
 
-  def write_schedule_attributes(value)
-    send("#{self.class.schedule_attributes_key}=", value)
+  def write_schedule_field(value)
+    send("#{self.class.schedule_field}=", value)
   end
 end
