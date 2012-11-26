@@ -32,7 +32,7 @@ module ScheduleAttributes::ActiveRecord
   end
 
   def read_schedule_field
-    send self[self.class.schedule_field] or self.class.default_schedule
+    self[self.class.schedule_field] or self.class.default_schedule
   end
 
   def write_schedule_field(value)
