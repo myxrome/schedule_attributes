@@ -41,8 +41,12 @@ describe ScheduleAttributes::RuleParser::Day do
       it { should == IceCube::Rule.daily.month_of_year(6,7,8) }
     end
 
-    context args: {yearly_start_month: 11, yearly_end_month: 2} do
-      it { should == IceCube::Rule.daily.month_of_year(11,12,1,2) }
+    context args: {yearly_start_month: 11, yearly_end_month: 1} do
+      it { should == IceCube::Rule.daily.month_of_year(11,12,1) }
+    end
+
+    context args: {yearly_start_month: 12, yearly_end_month: 2} do
+      it { should == IceCube::Rule.daily.month_of_year(12,1,2) }
     end
 
     context args: {
@@ -75,15 +79,24 @@ describe ScheduleAttributes::RuleParser::Day do
     end
 
     context args: {yearly_start_month: 3, yearly_end_month: 4, yearly_end_month_day: 25} do
-      it "returns exceptions for the trailing day only" do
+      it "returns exceptions for the trailing days of the last month only" do
         should == [IceCube::Rule.daily.month_of_year(4).day_of_month(*26..31)]
       end
     end
 
     context args: {yearly_start_month: 3, yearly_start_month_day: 3, yearly_end_month: 4} do
-      it "returns exceptions for the trailing day only" do
+      it "returns exceptions for the leading days of the first month" do
         should == [
           IceCube::Rule.daily.month_of_year(3).day_of_month(*1..2)
+        ]
+      end
+    end
+
+    context args: {yearly_start_month: 3, yearly_end_month: 4, yearly_start_month_day: 31, yearly_end_month_day: 1} do
+      it "excepts the first 30 days of first month and last 30 days of last month" do
+        should == [
+          IceCube::Rule.daily.month_of_year(3).day_of_month(*1..30),
+          IceCube::Rule.daily.month_of_year(4).day_of_month(*2..31)
         ]
       end
     end

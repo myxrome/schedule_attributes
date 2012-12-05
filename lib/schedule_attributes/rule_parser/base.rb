@@ -78,11 +78,19 @@ module ScheduleAttributes::RuleParser
     end
 
     def param_to_month(param, default)
-      (param.to_i % 12).tap { |m| return default if m == 0 }
+      param = param.to_i
+      (param % 12).tap do |m|
+        return param if param == 12
+        return default if m == 0
+      end
     end
 
     def param_to_day(param, default)
-      (param.to_i % 31).tap { |d| return default if d == 0 }
+      param = param.to_i
+      (param.to_i % 31).tap do |d|
+        return param if param == 31
+        return default if d == 0
+      end
     end
   end
 end
