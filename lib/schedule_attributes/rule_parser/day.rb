@@ -1,6 +1,8 @@
 module ScheduleAttributes::RuleParser
   class Day < Base
 
+    private
+
     # @return [IceCube::Rule]
     #
     def parse_options

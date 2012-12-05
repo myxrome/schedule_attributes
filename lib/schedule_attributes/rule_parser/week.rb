@@ -5,6 +5,8 @@ module ScheduleAttributes::RuleParser
   #
   class Week < Base
 
+    private
+
     # @return [IceCube::Rule]
     #
     def parse_options

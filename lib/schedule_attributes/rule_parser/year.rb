@@ -1,6 +1,8 @@
 module ScheduleAttributes::RuleParser
   class Year < Base
 
+    private
+
     # @return [IceCube::Rule]
     #
     def parse_options
@@ -11,8 +13,6 @@ module ScheduleAttributes::RuleParser
         end
       end
     end
-
-    private
 
     def set_yearly_months; nil end
 

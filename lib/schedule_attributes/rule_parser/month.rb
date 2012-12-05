@@ -9,6 +9,8 @@ module ScheduleAttributes::RuleParser
   #
   class Month < Base
 
+    private
+
     # @return [IceCube::Rule]
     #
     def parse_options
@@ -25,8 +27,6 @@ module ScheduleAttributes::RuleParser
         @rule
       end
     end
-
-    private
 
     def weekdays_by_week_of_month
       selected_weekdays.collect(Hash.new) do |memo, wd|
