@@ -58,13 +58,16 @@ module ScheduleAttributes
       end
 
       def yearly_start_month_day?
-        @params[:yearly_start_month].present? &&
-          @params[:yearly_start_month_day].present?
+        [ @params[:yearly_start_month].present?,
+          @params[:yearly_start_month_day].present?,
+          @params[:yearly_start_month_day].to_i > 1
+        ].all?
       end
 
       def yearly_end_month_day?
         @params[:yearly_end_month].present? &&
-        @params[:yearly_end_month_day].present?
+        @params[:yearly_end_month_day].present? &&
+        @params[:yearly_end_month_day].to_i < Time.days_in_month(@params[:yearly_end_month].to_i)
       end
 
       def weekdays

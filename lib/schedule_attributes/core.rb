@@ -114,7 +114,10 @@ module ScheduleAttributes
               end
 
               if m == atts[:yearly_end_month]
-                atts[:yearly_end_month_day] = days.first - 1 if days.last == 31
+                if days.last == 31
+                  atts[:yearly_end_month_day] = days.first - 1
+                  atts[:yearly_start_month_day] ||= 1
+                end
               end
             end
           end

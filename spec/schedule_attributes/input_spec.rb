@@ -135,4 +135,40 @@ describe ScheduleAttributes::Input do
       it { should be_false }
     end
   end
+
+  describe "#yearly_start_month_day?" do
+    subject(:yearly_start_month_day) { input.yearly_start_month_day? }
+
+    context args: {repeat: '1', yearly_start_month_day: '2'} do
+      it { should be_false }
+    end
+
+    context args: {repeat: '1', yearly_start_month: '12', yearly_start_month_day: '2'} do
+      it { should be_true }
+    end
+
+    context args: {repeat: '1', yearly_start_month: '12', yearly_start_month_day: '1'} do
+      it { should be_false }
+    end
+  end
+
+  describe "#yearly_end_month_day?" do
+    subject(:yearly_end_month_day) { input.yearly_end_month_day? }
+
+    context args: {repeat: '1', yearly_end_month_day: '27'} do
+      it { should be_false }
+    end
+
+    context args: {repeat: '1', yearly_end_month: '12', yearly_end_month_day: '27'} do
+      it { should be_true }
+    end
+
+    context args: {repeat: '1', yearly_end_month: '12', yearly_end_month_day: '31'} do
+      it { should be_false }
+    end
+
+    context args: {repeat: '1', yearly_end_month: '11', yearly_end_month_day: '30'} do
+      it { should be_false }
+    end
+  end
 end

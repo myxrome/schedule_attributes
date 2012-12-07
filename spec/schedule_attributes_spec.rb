@@ -78,6 +78,12 @@ describe ScheduledModel do
         its(:rrules)     { should == [IceCube::Rule.yearly.day_of_month(1).month_of_year(1)] }
         specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1986,1,1), Date.civil(1987,1,1)].map(&:to_time) }
       end
+
+      context args: {repeat: '1', interval_unit: 'day', start_date: '2012-09-27', yearly_start_month: '12', yearly_start_month_day: '1', yearly_end_month: '4', yearly_end_month_day: '21'} do
+        its(:start_time) { should == Time.new(2012,9,27) }
+        its(:rrules)     { should == [IceCube::Rule.daily.month_of_year(12,1,2,3,4)] }
+        its(:exrules)    { should == [IceCube::Rule.daily.month_of_year(4).day_of_month(*22..31)] }
+      end
     end
 
     describe "setting the schedule field", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
@@ -161,23 +167,41 @@ describe ScheduledModel do
       end
     end
 
-    context "when it has yearly start and end months" do
-      before do
-        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
-      end
-      specify do
-        subject.yearly_start_month.should == 11
+    context "when it has yearly date range" do
+      it "should have yearly start and end months" do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(12,1,2))
+
+        subject.yearly_start_month.should == 12
         subject.yearly_end_month.should == 2
       end
 
-      context "with exception rules for leading days" do
-        before do
-          schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
-          schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(11).day_of_month(*1..6))
-        end
-        specify do
-          subject.yearly_start_month_day.should == 7
-        end
+      it "should have a yearly start date" do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(11,12,1,2))
+        schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(11).day_of_month(*1..6))
+
+        subject.yearly_start_month.should == 11
+        subject.yearly_start_month_day.should == 7
+      end
+
+      it "should have a yearly end date" do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(1,2,3))
+        schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(3).day_of_month(*26..31))
+
+        subject.yearly_end_month.should == 3
+        subject.yearly_end_month_day.should == 25
+      end
+
+      it "should have no yearly start day for months only" do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(1,2,3))
+
+        subject.yearly_start_month_day.should be_nil
+      end
+
+      it "should have a yearly start day on the first when end day is set" do
+        schedule.add_recurrence_rule(IceCube::Rule.daily.month_of_year(1,2,3))
+        schedule.add_exception_rule(IceCube::Rule.daily.month_of_year(3).day_of_month(*26..31))
+
+        subject.yearly_start_month_day.should == 1
       end
     end
   end

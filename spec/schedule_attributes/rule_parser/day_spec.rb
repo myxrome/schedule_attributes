@@ -100,5 +100,14 @@ describe ScheduleAttributes::RuleParser::Day do
         ]
       end
     end
+
+    context args: {yearly_start_month: 12, yearly_end_month: 1, yearly_start_month_day: 31, yearly_end_month_day: 1} do
+      it "excepts the first 30 days of first month and last 30 days of last month" do
+        should == [
+          IceCube::Rule.daily.month_of_year(12).day_of_month(*1..30),
+          IceCube::Rule.daily.month_of_year(1).day_of_month(*2..31)
+        ]
+      end
+    end
   end
 end
