@@ -127,4 +127,12 @@ describe ScheduleAttributes::Input do
       it { should == [Time.new(2000,6,6,12,0)] }
     end
   end
+
+  describe "#ends?" do
+    subject(:ends) { input.ends? }
+
+    context args: {repeat: '1', end_date: ''} do
+      it { should be_false }
+    end
+  end
 end

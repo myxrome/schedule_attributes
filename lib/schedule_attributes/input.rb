@@ -126,7 +126,7 @@ module ScheduleAttributes
     end
 
     def ends?
-      @params[:end_date] && @params[:ends] != "never"
+      @params[:end_date].present? && @params[:ends] != "never"
     end
 
     def dates
