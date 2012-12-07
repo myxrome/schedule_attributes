@@ -29,10 +29,10 @@ module ScheduleAttributes
 
     def schedule_attributes=(options)
       input = ScheduleAttributes::Input.new(options)
-      new_schedule = IceCube::Schedule.new(input.start_time)
+      new_schedule = IceCube::Schedule.new(input.start_time || Date.today.to_time)
 
       if input.repeat?
-        parser = ScheduleAttributes::RuleParser[input.interval_unit].new(input)
+        parser = ScheduleAttributes::RuleParser[input.interval_unit || 'day'].new(input)
         new_schedule.add_recurrence_rule(parser.rule)
         parser.exceptions.each do |exrule|
           new_schedule.add_exception_rule(exrule)

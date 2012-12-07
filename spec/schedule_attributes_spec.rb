@@ -42,6 +42,11 @@ describe ScheduledModel do
         specify               { schedule.occurs_at?(helpers.parse_in_zone('1985-6-6 15:00')).should be_false }
       end
 
+      context args: {repeat: '1'} do
+        its(:start_time) { should == Date.today.to_time }
+        its(:rrules)     { should == [IceCube::Rule.daily] }
+      end
+
       context args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
         its(:start_time) { should == Date.new(1985,1,1).to_time }
         its(:rrules)     { should == [IceCube::Rule.daily(3)] }

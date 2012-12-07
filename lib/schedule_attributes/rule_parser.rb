@@ -6,10 +6,8 @@ module ScheduleAttributes
 
     def self.[](interval)
       parser_name = interval.to_s.capitalize
-      if RuleParser.const_defined? parser_name
+      if parser_name.present? && RuleParser.const_defined?(parser_name)
         RuleParser.const_get parser_name
-      else
-        RuleParser::Day
       end
     end
 
