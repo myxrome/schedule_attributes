@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency 'ice_cube', '~> 0.9.0'
+  s.add_dependency 'ice_cube', '~> 0.9.3'
   s.add_dependency 'activesupport'
   s.add_dependency 'tzinfo' # this should be an activesupport dependency!
 
