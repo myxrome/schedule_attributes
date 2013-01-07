@@ -24,10 +24,6 @@ module ScheduleAttributes::ActiveRecord
     end
   end
 
-  included do
-    @schedule_field ||= ScheduleAttributes::DEFAULT_ATTRIBUTE_KEY
-  end
-
   private
 
   def initialize(*args)
