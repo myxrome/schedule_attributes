@@ -9,5 +9,13 @@ module ScheduleAttributes
         Time.parse(str)
       end
     end
+
+    def self.today
+      if Time.respond_to?(:zone) && Time.zone
+        Date.today.to_time_in_current_zone
+      else
+        Date.today.to_time
+      end
+    end
   end
 end

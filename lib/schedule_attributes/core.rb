@@ -14,7 +14,7 @@ module ScheduleAttributes
 
   class << self
     def default_schedule
-      IceCube::Schedule.new(Date.today.to_time).tap do |s|
+      IceCube::Schedule.new(TimeHelpers.today).tap do |s|
         s.add_recurrence_rule(IceCube::Rule.daily)
       end
     end
