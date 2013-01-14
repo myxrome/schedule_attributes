@@ -28,15 +28,19 @@ module ScheduleAttributes::ActiveRecord
 
   def initialize(*args)
     super
-    self[self.class.schedule_field] ||= self.class.default_schedule
+    self[self.class.schedule_field] ||= default_schedule
   end
 
   def read_schedule_field
-    self[self.class.schedule_field] or self.class.default_schedule
+    self[self.class.schedule_field] or default_schedule
   end
 
   def write_schedule_field(value)
     self[self.class.schedule_field] = value
+  end
+
+  def default_schedule
+    self.class.default_schedule
   end
 end
 
