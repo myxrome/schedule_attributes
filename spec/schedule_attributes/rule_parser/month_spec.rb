@@ -32,7 +32,7 @@ describe ScheduleAttributes::RuleParser::Month do
       its_occurrences_until(4.months.from_now) { should == every_14th }
     end
 
-    pending args: {"ordinal_unit" => "week", "ordinal_week" => "2", "tuesday" => "1"} do
+    context args: {"ordinal_unit" => "week", "ordinal_week" => "2", "tuesday" => "1"}, pending: "Add support for :ordinal_week attribute" do
       it { should == IceCube::Rule.monthly.day_of_week(:tuesday => 2) }
     end
 
