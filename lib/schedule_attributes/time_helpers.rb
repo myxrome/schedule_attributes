@@ -12,7 +12,17 @@ module ScheduleAttributes
 
     def self.today
       if Time.respond_to?(:zone) && Time.zone
-        Date.today.to_time_in_current_zone
+        Date.current.to_time_in_current_zone
+      else
+        Date.today.to_time
+      end
+    end
+  end
+
+  module DateHelpers
+    def self.today
+      if Time.respond_to?(:zone) && Time.zone
+        Date.current.to_time_in_current_zone
       else
         Date.today.to_time
       end

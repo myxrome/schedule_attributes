@@ -29,7 +29,7 @@ module ScheduleAttributes
 
     def schedule_attributes=(options)
       input = ScheduleAttributes::Input.new(options)
-      new_schedule = IceCube::Schedule.new(input.start_time || Date.today.to_time)
+      new_schedule = IceCube::Schedule.new(input.start_time || TimeHelpers.today)
 
       if input.repeat?
         parser = ScheduleAttributes::RuleParser[input.interval_unit || 'day'].new(input)
@@ -59,7 +59,7 @@ module ScheduleAttributes
       if rule = schedule.rrules.first
         atts[:repeat]     = 1
         atts[:start_date] = schedule.start_time.to_date
-        atts[:date]       = Date.today # default for populating the other part of the form
+        atts[:date]       = Date.current # default for populating the other part of the form
 
         rule_hash = rule.to_hash
         atts[:interval] = rule_hash[:interval]
@@ -128,13 +128,11 @@ module ScheduleAttributes
         atts[:interval]   = 1
         atts[:date]       = schedule.rtimes.first.to_date
         atts[:dates]      = schedule.rtimes.map(&:to_date)
-        atts[:start_date] = Date.today # default for populating the other part of the form
+        atts[:start_date] = TimeHelpers.today # default for populating the other part of the form
       end
 
       OpenStruct.new(atts.delete_if { |k,v| v.blank? })
     end
-
-    private
 
   end
 end
