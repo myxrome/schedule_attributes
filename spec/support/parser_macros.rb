@@ -4,19 +4,21 @@ module SpecHelpers
 
     module ClassMethods
       def its_occurrences_until(date, &block)
-        shared_examples("occurrences") do
+        describe "occurrences" do
+          shared_examples do
 
-          orig_subject = subject
+            orig_subject = subject
 
-          self.class.class_eval do
-            define_method(:subject) do
-              schedule = IceCube::Schedule.new(Date.today.to_time)
-              schedule.add_recurrence_rule(orig_subject)
-              @_subject = schedule.occurrences(date)
+            self.class.class_eval do
+              define_method(:subject) do
+                schedule = IceCube::Schedule.new(Date.today.to_time)
+                schedule.add_recurrence_rule(orig_subject)
+                @_subject = schedule.occurrences(date)
+              end
             end
-          end
 
-          yield
+            yield
+          end
         end
       end
     end
