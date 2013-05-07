@@ -89,6 +89,8 @@ describe ScheduledModel do
         its(:rrules)     { should == [IceCube::Rule.daily.month_of_year(12,1,2,3,4)] }
         its(:exrules)    { should == [IceCube::Rule.daily.month_of_year(4).day_of_month(*22..31)] }
       end
+
+      context "all_day", pending: "Work in progress"
     end
 
     describe "setting the schedule field", args: {repeat: '1', start_date: '1-1-1985', interval_unit: 'day', interval: '3'} do
@@ -108,7 +110,7 @@ describe ScheduledModel do
 
     context "for a single date" do
       before { schedule.add_recurrence_time(Date.tomorrow.to_time) }
-      it     { should == OpenStruct.new(repeat: 0, interval: 1, date: Date.tomorrow, dates: [Date.tomorrow], start_date: Date.today, start_time: "00:00", end_time: "00:00") }
+      it     { should == OpenStruct.new(repeat: 0, interval: 1, date: Date.tomorrow, dates: [Date.tomorrow], start_date: Date.today, all_day: true) }
       its(:date) { should be_a(Date) }
     end
 
@@ -116,7 +118,7 @@ describe ScheduledModel do
       before do
         schedule.add_recurrence_rule(IceCube::Rule.daily(4))
       end
-      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'never', :date => Date.today, :start_time => "00:00", :end_time => "00:00") }
+      it { should == OpenStruct.new(repeat: 1, start_date: Date.tomorrow, interval_unit: 'day', interval: 4, ends: 'never', date: Date.today, all_day: true) }
       its(:start_date){ should be_a(Date) }
     end
 
@@ -124,7 +126,7 @@ describe ScheduledModel do
       before do
         schedule.add_recurrence_rule(IceCube::Rule.daily(4).until((Date.today+10).to_time))
       end
-      it{ should == OpenStruct.new(:repeat => 1, :start_date => Date.tomorrow, :interval_unit => 'day', :interval => 4, :ends => 'eventually', :end_date => Date.today+10, :date => Date.today, :start_time => "00:00", :end_time => "00:00") }
+      it { should == OpenStruct.new(repeat: 1, start_date: Date.tomorrow, interval_unit: 'day', interval: 4, ends: 'eventually', end_date: Date.today+10, date: Date.today, all_day: true) }
       its(:start_date){ should be_a(Date) }
       its(:end_date){ should be_a(Date) }
     end
@@ -144,8 +146,7 @@ describe ScheduledModel do
           :monday        => 1,
           :wednesday     => 1,
           :friday        => 1,
-          :start_time    => "00:00",
-          :end_time      => "00:00",
+          :all_day       => true,
 
           :date          => Date.today #for the form
         )
@@ -164,8 +165,7 @@ describe ScheduledModel do
           :interval_unit => 'year',
           :interval      => 1,
           :ends          => 'never',
-          :start_time    => "00:00",
-          :end_time      => "00:00",
+          :all_day       => true,
 
           :date          => Date.today #for the form
         )
@@ -209,6 +209,8 @@ describe ScheduledModel do
         subject.yearly_start_month_day.should == 1
       end
     end
+
+    context "all_day", pending: "Work in progress"
   end
 
   def helpers

@@ -48,13 +48,19 @@ module ScheduleAttributes
       write_schedule_field(new_schedule)
     end
 
+    # TODO: use a proper form input model, not OpenStruct
+    #
     def schedule_attributes
       atts = {}
       time_format = ScheduleAttributes.configuration.time_format
       schedule = read_schedule_field || ScheduleAttributes.default_schedule
 
-      atts[:start_time] = schedule.start_time.strftime(time_format)
-      atts[:end_time]   = (schedule.start_time + schedule.duration.to_i).strftime(time_format)
+      if schedule.start_time.seconds_since_midnight == 0 && schedule.end_time.nil?
+        atts[:all_day] = true
+      else
+        atts[:start_time] = schedule.start_time.strftime(time_format)
+        atts[:end_time]   = (schedule.end_time).strftime(time_format) if schedule.end_time
+      end
 
       if rule = schedule.rrules.first
         atts[:repeat]     = 1
