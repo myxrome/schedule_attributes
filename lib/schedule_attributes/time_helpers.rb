@@ -22,9 +22,9 @@ module ScheduleAttributes
   module DateHelpers
     def self.today
       if Time.respond_to?(:zone) && Time.zone
-        Date.current.to_time_in_current_zone
+        Date.current
       else
-        Date.today.to_time
+        Date.today
       end
     end
   end

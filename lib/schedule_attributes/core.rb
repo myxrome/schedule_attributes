@@ -128,7 +128,7 @@ module ScheduleAttributes
         atts[:interval]   = 1
         atts[:date]       = schedule.rtimes.first.to_date
         atts[:dates]      = schedule.rtimes.map(&:to_date)
-        atts[:start_date] = TimeHelpers.today # default for populating the other part of the form
+        atts[:start_date] = DateHelpers.today # default for populating the other part of the form
       end
 
       OpenStruct.new(atts.delete_if { |k,v| v.blank? })

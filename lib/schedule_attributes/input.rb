@@ -112,11 +112,13 @@ module ScheduleAttributes
     end
 
     def start_time
-      parse_date_time(date_input, @params[:start_time])
+      time = @params[:start_time] unless @params[:all_day]
+      parse_date_time(date_input, time)
     end
 
     def end_time
-      return nil unless @params[:end_time]
+      return nil if @params[:all_day]
+      return nil unless @params[:end_time].present?
       parse_date_time(date_input, @params[:end_time])
     end
 
@@ -125,7 +127,7 @@ module ScheduleAttributes
     end
 
     def end_date
-      parse_date_time(@params[:end_date]) if @params[:end_date]
+      parse_date_time(@params[:end_date], @params[:start_time]) if @params[:end_date]
     end
 
     def ends?
