@@ -29,9 +29,11 @@ module ScheduleAttributes::RuleParser
     end
 
     def weekdays_by_week_of_month
-      selected_weekdays.collect(Hash.new) do |memo, wd|
-        memo[wd] = input.ordinal_week
-      end
+      Hash[selected_weekdays.map { |wd| [wd, Array(input.ordinal_week)] }]
+    end
+
+    def selected_weekdays
+      input.weekdays.any? ? input.weekdays : ScheduleAttributes::DAY_NAMES
     end
 
   end
