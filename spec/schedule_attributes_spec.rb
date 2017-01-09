@@ -55,7 +55,7 @@ describe ScheduledModel do
 
       context args: {repeat: "1", start_date: "1-1-1985", interval_unit: "day", interval: "3", end_date: "29-12-1985", ends: "eventually"} do
         its(:start_time) { should == Date.new(1985,1,1).to_time }
-        its(:rrules)     { should == [ IceCube::Rule.daily(3).until(Date.new(1985,12,29).to_time_in_current_zone) ] }
+        its(:rrules)     { should == [ IceCube::Rule.daily(3).until(Date.new(1985,12,29).in_time_zone) ] }
         specify          { schedule.first(3).should == [Date.civil(1985,1,1), Date.civil(1985,1,4), Date.civil(1985,1,7)].map(&:to_time) }
       end
 
