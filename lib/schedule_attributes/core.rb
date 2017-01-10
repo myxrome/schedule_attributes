@@ -4,7 +4,6 @@ require 'active_support/time_with_zone'
 require 'ice_cube'
 require 'ostruct'
 require 'schedule_attributes/configuration'
-require 'schedule_attributes/extensions/ice_cube'
 require 'schedule_attributes/input'
 require 'schedule_attributes/rule_parser'
 
